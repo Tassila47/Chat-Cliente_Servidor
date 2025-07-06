@@ -1,13 +1,66 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-package projetoderedes;
+package redes;
 
-/**
- *
- * @author tassi
- */
-public class Cliente {
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
     
+public class Cliente {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        try {
+           
+           System.out.print("Digite o endereco do servidor (deixe em branco para 'localhost'): ");
+            String address = scanner.nextLine();
+            if (address.isEmpty()) address = "localhost";
+
+          System.out.print("Digite a porta do servidor (deixe em branco para '10000'): ");
+            String portInput = scanner.nextLine();
+            int port = portInput.isEmpty() ? 10000 : Integer.parseInt(portInput);
+
+            Socket socket = new Socket(address, port);
+          System.out.println("Conectado ao SERVIDOR: " + address + ":" + port);
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+
+            
+            Thread recebendo = new Thread(() -> {
+                String msg;
+                try {
+                    while ((msg = reader.readLine()) != null) {
+                        if (msg.equalsIgnoreCase("sair")) {
+                            System.out.println("O servidor encerrou a conversa.");
+                            System.exit(0);
+                        }
+                        System.out.println("SERVIDOR> " + msg);
+                    }
+                } catch (IOException e) {
+                    System.out.println("Erro ao receber mensagem: " + e.getMessage());
+                }
+            });
+
+            
+            Thread enviando = new Thread(() -> {
+                String msg;
+                while (true) {
+                    System.out.print("CLIENTE> ");
+                    msg = scanner.nextLine();
+                    writer.println(msg);
+                    if (msg.equalsIgnoreCase("sair")) {
+                        System.out.println("Encerrando a conversa...");
+                        System.exit(0);
+                    }
+                }
+            });
+
+            recebendo.start();
+            enviando.start();
+
+        } catch (IOException e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
+    }
 }
